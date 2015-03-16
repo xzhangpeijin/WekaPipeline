@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.runners;
+package org.bcl.weka.pipeline.mimic;
 
 import java.io.*;
 import java.util.*;

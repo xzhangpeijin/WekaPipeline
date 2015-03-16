@@ -42,7 +42,7 @@ import org.bcl.weka.pipeline.util.SortFile;
 /**
  * Abstract class for running generic Weka pipelines
  */
-public class MimicRunner
+public class WekaRunner
 {
 	public static void main(String[] args) throws Exception
 	{
@@ -58,7 +58,7 @@ public class MimicRunner
 		run = torun.toArray(run);
 		for(int x = 0; x < run.length; x++)
 			System.out.println(run[x].getName());
-		new MimicRunner(run, dir, "");
+		new WekaRunner(run, dir, "");
 	}
 	
 	public static class ClassifierPair {
@@ -197,7 +197,7 @@ public class MimicRunner
 		return result;
 	}
 
-	public MimicRunner(SortFile[] inputfiles, File outputdirectory, String removeop) throws Exception
+	public WekaRunner(SortFile[] inputfiles, File outputdirectory, String removeop) throws Exception
 	{
 	    List<ClassifierPair> classifiers = getClassifiers();
 	    

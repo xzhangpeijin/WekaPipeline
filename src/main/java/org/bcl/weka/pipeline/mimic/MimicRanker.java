@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.util;
+package org.bcl.weka.pipeline.mimic;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.bcl.weka.pipeline.util.SortFile;
 
 import weka.attributeSelection.GainRatioAttributeEval;
 import weka.attributeSelection.Ranker;
@@ -21,47 +22,23 @@ import weka.filters.unsupervised.attribute.Discretize;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.ReplaceMissingWithUserConstant;
 
-public class RankerRunner
+public class MimicRanker
 {
-	public static void main(String[] args) throws Exception
+	public MimicRanker(SortFile[] inputfiles, File outputdirectory) throws Exception
 	{
-		File dir = new File("I:\\Documents\\Dropbox\\PRIMES\\PRIMES Shared");
-		ArrayList<SortFile> torun = new ArrayList<SortFile>();
-		for(int x = 0; x < dir.listFiles().length; x++)
-		{	
-			if(dir.listFiles()[x].getName().contains("temporal.extract.v14.1.extended") && dir.listFiles()[x].getName().contains("csv"))
-				torun.add(new SortFile(dir.listFiles()[x].getPath()));
-		}
-		Collections.sort(torun);
-		SortFile[] run = new SortFile[torun.size()];
-		run = torun.toArray(run);
-		for(int x = 0; x < run.length; x++)
-			System.out.println(run[x].getName());
-		new RankerRunner(run, dir, "");
-	}
-
-	public RankerRunner(SortFile[] inputfiles, File outputdirectory, String removeop) throws Exception
-	{
-		if(removeop.equals(""))
-			removeop = "1,2,5,6";
-
 		File outputfile = new File(outputdirectory.getPath() + File.separator + "AttributeRanks.txt");
 		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputfile)));
 
 		out.println("MIMIC Attribute Rankings");
 		out.println("Files Selected: " + inputfiles.length);
-		out.println("Attributes to remove: " + removeop);
 		out.println("Selection: BestFirst Bidirectional with Search Termination 5");
 		out.println("Ranking: Gain Ratio (values printed)");
 		out.println("\n");
 		out.println("============================");
 		out.println("\n");
 		
-		Arrays.sort(inputfiles);
-		System.out.println(inputfiles.length);
 		for(int x = 0; x < inputfiles.length; x++)
 		{
-			System.err.println(inputfiles[x].getName());
 			out.println("File: " + inputfiles[x].getName() + "\n");
 			Instances data;
 			if(inputfiles[x].getPath().substring(inputfiles[x].getPath().length() - 3).equals("csv"))
@@ -78,7 +55,7 @@ public class RankerRunner
 			}
 			data.setClassIndex(data.numAttributes() - 1);
 
-			String[] removeOptions = {"-R", removeop};
+			String[] removeOptions = {"-R", MimicMain.TO_REMOVE};
 			Remove remove = new Remove();
 			remove.setOptions(removeOptions);
 			remove.setInputFormat(data); 
