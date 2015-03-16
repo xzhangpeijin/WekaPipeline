@@ -1,29 +1,5 @@
 package org.bcl.weka.pipeline.runners;
 
-import weka.classifiers.Classifier;
-import weka.classifiers.Evaluation;
-import weka.classifiers.bayes.BayesNet;
-import weka.classifiers.functions.LibSVM;
-import weka.classifiers.functions.Logistic;
-import weka.classifiers.functions.SimpleLogistic;
-import weka.classifiers.lazy.IBk;
-import weka.classifiers.lazy.KStar;
-import weka.classifiers.meta.LogitBoost;
-import weka.classifiers.trees.DecisionStump;
-import weka.classifiers.trees.HoeffdingTree;
-import weka.classifiers.trees.J48;
-import weka.classifiers.trees.REPTree;
-import weka.classifiers.trees.RandomForest;
-import weka.classifiers.trees.RandomTree;
-import weka.core.Instances;
-import weka.core.Utils;
-import weka.core.converters.CSVLoader;
-import weka.core.neighboursearch.LinearNNSearch;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Discretize;
-import weka.filters.unsupervised.attribute.Remove;
-import weka.filters.unsupervised.attribute.ReplaceMissingWithUserConstant;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,11 +12,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.bcl.weka.pipeline.util.ClassificationRunner;
 import org.bcl.weka.pipeline.util.SortFile;
 
+import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.classifiers.bayes.BayesNet;
+import weka.core.Instances;
+import weka.core.Utils;
+import weka.core.converters.CSVLoader;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Discretize;
+import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.ReplaceMissingWithUserConstant;
+
 /**
- * Abstract class for running generic Weka pipelines
+ * Runs classifiers for MIMIC experiments
  */
 public class WekaRunner
 {
@@ -48,10 +34,13 @@ public class WekaRunner
 	{
 		File dir = new File("I:\\Documents\\Dropbox\\PRIMES\\PRIMES Shared");
 		ArrayList<SortFile> torun = new ArrayList<SortFile>();
-		for(int x = 0; x < dir.listFiles().length; x++)
+		File[] files = dir.listFiles();
+		for(int x = 0; x < files.length; x++)
 		{	
-			if(dir.listFiles()[x].getName().contains("temporal.extract.v14.1.extended") && dir.listFiles()[x].getName().contains("csv"))
-				torun.add(new SortFile(dir.listFiles()[x].getPath()));
+			if(files[x].getName().contains("temporal.extract.14.2") && 
+			   files[x].getName().contains(".hours.category.") && files[x].getName().contains("csv")) {
+				torun.add(new SortFile(files[x].getPath()));
+			}
 		}
 		Collections.sort(torun);
 		SortFile[] run = new SortFile[torun.size()];
