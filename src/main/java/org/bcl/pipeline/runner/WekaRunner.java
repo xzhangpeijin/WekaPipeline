@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.runners;
+package org.bcl.pipeline.runner;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.bcl.weka.pipeline.util.SortFile;
+import org.bcl.pipeline.util.SortFile;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;

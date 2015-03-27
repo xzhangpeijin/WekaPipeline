@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.util;
+package org.bcl.pipeline.util;
 
 import java.io.File;
 
@@ -16,10 +16,14 @@ public class SortFile extends File implements Comparable<File>
 {
 	private String filename;
 
-	public SortFile(String arg0) 
+	public SortFile(String arg) 
 	{
-		super(arg0);
-		filename = arg0.substring(arg0.lastIndexOf(File.separator) + 1);
+		super(arg);
+		filename = arg.substring(arg.lastIndexOf(File.separator) + 1);
+	}
+	
+	public SortFile(File arg) {
+	  this(arg.getPath());
 	}
 
 	public int compareTo(File a)

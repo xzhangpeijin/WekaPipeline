@@ -1,12 +1,13 @@
-package org.bcl.weka.pipeline.runners;
+package org.bcl.pipeline.runner;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
-import org.bcl.weka.pipeline.util.ClassificationRunner;
-import org.bcl.weka.pipeline.util.WekaFilter;
-import org.bcl.weka.pipeline.util.SortFile;
+import org.bcl.pipeline.util.ClassificationRunner;
+import org.bcl.pipeline.util.SortFile;
+import org.bcl.pipeline.util.WekaFilter;
 
 import java.io.File;
 

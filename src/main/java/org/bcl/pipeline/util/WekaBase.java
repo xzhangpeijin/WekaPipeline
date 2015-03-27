@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.util;
+package org.bcl.pipeline.util;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;

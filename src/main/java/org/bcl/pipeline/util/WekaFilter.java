@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.util;
+package org.bcl.pipeline.util;
 
 import java.io.File;
 import javax.swing.filechooser.*;

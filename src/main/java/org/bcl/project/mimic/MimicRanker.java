@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.mimic;
+package org.bcl.project.mimic;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -6,11 +6,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
-import org.bcl.weka.pipeline.util.SortFile;
+import org.bcl.pipeline.util.SortFile;
 
 import weka.attributeSelection.GainRatioAttributeEval;
 import weka.attributeSelection.Ranker;
@@ -18,62 +16,48 @@ import weka.core.Instances;
 import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
-import weka.filters.unsupervised.attribute.Discretize;
-import weka.filters.unsupervised.attribute.Remove;
-import weka.filters.unsupervised.attribute.ReplaceMissingWithUserConstant;
 
 public class MimicRanker
 {
-	public MimicRanker(SortFile[] inputfiles, File outputdirectory) throws Exception
+  public MimicRanker(List<SortFile> inputfiles, File outputfile) throws Exception {
+    this(inputfiles, outputfile, null);
+  }
+  
+	public MimicRanker(List<SortFile> inputfiles, File outputfile, String removeop) throws Exception
 	{
-		File outputfile = new File(outputdirectory.getPath() + File.separator + "AttributeRanks.txt");
 		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputfile)));
 
 		out.println("MIMIC Attribute Rankings");
-		out.println("Files Selected: " + inputfiles.length);
+		out.println("Files Selected: " + inputfiles.size());
 		out.println("Selection: BestFirst Bidirectional with Search Termination 5");
 		out.println("Ranking: Gain Ratio (values printed)");
 		out.println("\n");
 		out.println("============================");
 		out.println("\n");
 		
-		for(int x = 0; x < inputfiles.length; x++)
+		for (File file : inputfiles)
 		{
-			out.println("File: " + inputfiles[x].getName() + "\n");
+			out.println("File: " + file.getName() + "\n");
 			Instances data;
-			if(inputfiles[x].getPath().substring(inputfiles[x].getPath().length() - 3).equals("csv"))
+			if(file.getPath().substring(file.getPath().length() - 3).equals("csv"))
 			{
 				CSVLoader loader = new CSVLoader();
-				loader.setSource(inputfiles[x]);
+				loader.setSource(file);
 				data = loader.getDataSet();
 			}
 			else
 			{
-				BufferedReader reader = new BufferedReader(new FileReader(inputfiles[x]));
+				BufferedReader reader = new BufferedReader(new FileReader(file));
 				data = new Instances(reader);
 				reader.close();
 			}
 			data.setClassIndex(data.numAttributes() - 1);
 
-			String[] removeOptions = {"-R", MimicMain.TO_REMOVE};
-			Remove remove = new Remove();
-			remove.setOptions(removeOptions);
-			remove.setInputFormat(data); 
-			data = Filter.useFilter(data, remove);
-
-			//Discretize into three equal frequency bins
-			String[] discretizeOptions = {"-F", "-B", "3", "-M", "-1.0", "-R", "first-last"};
-			Discretize discretize = new Discretize();
-			discretize.setOptions(discretizeOptions);
-			discretize.setInputFormat(data);
-			data = Filter.useFilter(data, discretize);
-
-			String[] replaceOptions = {"-A", "first-last", "-N", "NA", };
-			ReplaceMissingWithUserConstant replace = new ReplaceMissingWithUserConstant();
-			replace.setOptions(replaceOptions);
-			replace.setInputFormat(data);
-			data = Filter.useFilter(data, replace);
-
+			if (removeop != null) {
+			  data = MimicMain.preprocessData(data, removeop);
+			} else {
+		    data = MimicMain.preprocessData(data);
+			}
 			//Attribute Selection
 //			CfsSubsetEval evaluator = new CfsSubsetEval();
 //			String[] evalOptions = {"-P", "3", "-E", "3"};

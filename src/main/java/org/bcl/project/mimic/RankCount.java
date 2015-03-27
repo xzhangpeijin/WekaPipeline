@@ -1,4 +1,4 @@
-package org.bcl.weka.pipeline.mimic;
+package org.bcl.project.mimic;
 
 import java.io.*;
 import java.util.*;
