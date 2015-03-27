@@ -1,16 +1,27 @@
 package org.bcl.pipeline.runner;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.bcl.pipeline.util.ClassificationRunner;
 import org.bcl.pipeline.util.SortFile;
 import org.bcl.pipeline.util.WekaFilter;
 
-import java.io.File;
-
+@SuppressWarnings("serial")
 public class FileChooser extends JPanel implements ActionListener 
 {
 	private JButton openButton, compile;

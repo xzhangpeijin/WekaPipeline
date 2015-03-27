@@ -12,7 +12,6 @@ import java.util.Random;
 import org.bcl.pipeline.util.SortFile;
 
 import weka.classifiers.Evaluation;
-import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.functions.Logistic;
 import weka.core.Instances;
 import weka.core.Utils;
