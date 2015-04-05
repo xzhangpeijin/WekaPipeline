@@ -12,7 +12,7 @@ import java.util.Random;
 import org.bcl.pipeline.util.SortFile;
 
 import weka.classifiers.Evaluation;
-import weka.classifiers.functions.Logistic;
+import weka.classifiers.bayes.BayesNet;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.CSVLoader;
@@ -65,19 +65,19 @@ public class MimicRunner
         data = MimicMain.preprocessData(data);
 			}
 
-//			String[] bayesOptions = {"-D", "-Q", "weka.classifiers.bayes.net.search.local.TAN", "--", 
-//			    "-S", "BAYES", "-E", "weka.classifiers.bayes.net.estimate.SimpleEstimator",
-//			    "--", "-A", "0.5"};
-//			BayesNet bayes = new BayesNet();
-//			bayes.setOptions(bayesOptions);
+			String[] bayesOptions = {"-D", "-Q", "weka.classifiers.bayes.net.search.local.TAN", "--", 
+			    "-S", "BAYES", "-E", "weka.classifiers.bayes.net.estimate.SimpleEstimator",
+			    "--", "-A", "0.5"};
+			BayesNet bayes = new BayesNet();
+			bayes.setOptions(bayesOptions);
 			
-			String[] logisticOptions = {"-R", "1.0E-8", "-M", "-1"};
-			Logistic logistic = new Logistic();
-			logistic.setOptions(logisticOptions);
+//			String[] logisticOptions = {"-R", "1.0E-8", "-M", "-1"};
+//			Logistic logistic = new Logistic();
+//			logistic.setOptions(logisticOptions);
 			
 	    Evaluation eval = new Evaluation(data);
-			eval.crossValidateModel(logistic, data, 10, new Random(1));
-			out.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%n", file.getName(), "Logistic Regression",
+			eval.crossValidateModel(bayes, data, 10, new Random(1));
+			out.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%n", file.getName(), "TAN Bayes",
 			    Utils.doubleToString(eval.pctCorrect(), 4),
 			    Utils.doubleToString(eval.pctIncorrect(), 4),
 			    Utils.doubleToString(eval.weightedAreaUnderROC(), 4),

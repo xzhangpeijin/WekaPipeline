@@ -53,7 +53,7 @@ public class MimicMain {
     
     assert(complications != null);
     
-    runSingleLayer(runfiles, dir);
+    //runSingleLayer(runfiles, dir);
     runDoubleLayer(runfiles, dir, complications);
   }
   
@@ -93,151 +93,158 @@ public class MimicMain {
   public static void runDoubleLayer(List<File> runfiles, 
       File outdir, Map<String, Integer> complications) throws Exception {
     List<SortFile> outputs = new ArrayList<SortFile>();
+    Set<Integer> cases = new HashSet<Integer>();
     for (File data : runfiles) {
       String name = data.getName();
       Map<Integer, MimicData> patientmap = MimicData.makeData(data);
-      
-      File temp = File.createTempFile("icd9temp", ".csv");
-      PrintWriter out = new PrintWriter(new FileWriter(temp));
-      String header = getHeader(data);
-      header = header.substring(0, header.lastIndexOf(","));
-      out.println(header);
       for (int hadm_id : patientmap.keySet()) {
-        MimicData info = patientmap.get(hadm_id);
-        info.setClass(null);
-        out.println(info.toString());
-      }
-      out.flush();
-      out.close();
-      
-      CSVLoader loader = new CSVLoader();
-      loader.setSource(temp);
-      Instances patients = loader.getDataSet();
-      patients = preprocessData(patients, "1,6,7");
-      
-      for (Instance instance : patients) {
-        patientmap.get((int)instance.value(0)).addInstance(instance);
-      }
-      
-      temp.delete();
-      
-      List<String> yn = new ArrayList<String>();
-      yn.add("Y");
-      yn.add("N");
-      
-      Map<String, BayesNet> classifiers = new HashMap<String, BayesNet>();
-      for (String code : complications.keySet()) {
-        Instances instances = new Instances(patients);
-        instances.delete();
-        
-        List<Instance> controls = new ArrayList<Instance>();
-        Set<Integer> cases = new HashSet<Integer>();
-        for (int hadm_id : patientmap.keySet()) {
-          MimicData info = patientmap.get(hadm_id);
-          if (info.icd9codes.contains(code)) {
-            instances.add(info.instance);
-            cases.add(hadm_id);
-          } else {
-            controls.add(info.instance);
-          }
-        }
-        
-        if (cases.size() > 0) {
-          // Randomly sample controls
-          Random rand = new Random(System.currentTimeMillis());
-          for (int x = 0; x < cases.size(); x++) {
-            instances.add(controls.remove(rand.nextInt(controls.size())));
-          }
-          
-          Attribute att = new Attribute("Case", yn);
-          instances.insertAttributeAt(att, instances.numAttributes());
-          for (Instance instance : instances) {
-            if (cases.contains((int)instance.value(0))) {
-              instance.setValue(instances.numAttributes() - 1, "Y");
-            } else {
-              instance.setValue(instances.numAttributes() - 1, "N");
-            }
-          }
-          
-          instances.deleteAttributeAt(0);
-          
-          instances.setClassIndex(instances.numAttributes() - 1);
-
-          String[] bayesOptions = {"-D", "-Q", "weka.classifiers.bayes.net.search.local.TAN", "--", 
-              "-S", "BAYES", "-E", "weka.classifiers.bayes.net.estimate.SimpleEstimator",
-              "--", "-A", "0.5"};
-          BayesNet bayes = new BayesNet();
-          bayes.setOptions(bayesOptions);
-          bayes.buildClassifier(instances);
-          classifiers.put(code, bayes);
+        if (!patientmap.get(hadm_id).categories.contains(0) || patientmap.get(hadm_id).categories.size() > 1) {
+          cases.add(hadm_id);
         }
       }
-      
-      patients.deleteAttributeAt(0);
+//      
+//      File temp = File.createTempFile("icd9temp", ".csv");
+//      PrintWriter out = new PrintWriter(new FileWriter(temp));
+//      String header = getHeader(data);
+//      header = header.substring(0, header.lastIndexOf(","));
+//      out.println(header);
+//      for (int hadm_id : patientmap.keySet()) {
+//        MimicData info = patientmap.get(hadm_id);
+//        info.setClass(null);
+//        out.println(info.toString());
+//      }
+//      out.flush();
+//      out.close();
+//      
+//      CSVLoader loader = new CSVLoader();
+//      loader.setSource(temp);
+//      Instances patients = loader.getDataSet();
+//      patients = preprocessData(patients, "1,6,7");
+//      
+//      for (Instance instance : patients) {
+//        patientmap.get((int)instance.value(0)).addInstance(instance);
+//      }
+//      
+//      temp.delete();
+//      
+//      List<String> yn = new ArrayList<String>();
+//      yn.add("Y");
+//      yn.add("N");
+//      
+//      Map<String, BayesNet> classifiers = new HashMap<String, BayesNet>();
+//      for (String code : complications.keySet()) {
+//        Instances instances = new Instances(patients);
+//        instances.delete();
+//        
+//        List<Instance> controls = new ArrayList<Instance>();
+//        Set<Integer> cases = new HashSet<Integer>();
+//        for (int hadm_id : patientmap.keySet()) {
+//          MimicData info = patientmap.get(hadm_id);
+//          if (info.icd9codes.contains(code)) {
+//            instances.add(info.instance);
+//            cases.add(hadm_id);
+//          } else {
+//            controls.add(info.instance);
+//          }
+//        }
+//        
+//        if (cases.size() > 0) {
+//          // Randomly sample controls
+//          Random rand = new Random(System.currentTimeMillis());
+//          for (int x = 0; x < cases.size(); x++) {
+//            instances.add(controls.remove(rand.nextInt(controls.size())));
+//          }
+//          
+//          Attribute att = new Attribute("Case", yn);
+//          instances.insertAttributeAt(att, instances.numAttributes());
+//          for (Instance instance : instances) {
+//            if (cases.contains((int)instance.value(0))) {
+//              instance.setValue(instances.numAttributes() - 1, "Y");
+//            } else {
+//              instance.setValue(instances.numAttributes() - 1, "N");
+//            }
+//          }
+//          
+//          instances.deleteAttributeAt(0);
+//          
+//          instances.setClassIndex(instances.numAttributes() - 1);
+//
+//          String[] bayesOptions = {"-D", "-Q", "weka.classifiers.bayes.net.search.local.TAN", "--", 
+//              "-S", "BAYES", "-E", "weka.classifiers.bayes.net.estimate.SimpleEstimator",
+//              "--", "-A", "0.5"};
+//          BayesNet bayes = new BayesNet();
+//          bayes.setOptions(bayesOptions);
+//          bayes.buildClassifier(instances);
+//          classifiers.put(code, bayes);
+//        }
+//      }
+//      
+//      patients.deleteAttributeAt(0);
 
-      for (int category = 1; category <= NUM_CATEGORIES; category++) {
-        String outputname = name.substring(0, name.lastIndexOf(".")) + 
-            ".category." + category + ".icd9.csv";
-        System.out.println(outputname);
-        File icd9out = new File(new File(outdir, ICD9_DIR), outputname);
-        outputs.add(new SortFile(icd9out));
-        out = new PrintWriter(new FileWriter(icd9out));
-
-        StringBuilder outheader = new StringBuilder();
-        outheader.append("hadm_id");
-        for (String code : complications.keySet()) {
-          outheader.append(",");
-          outheader.append(code);
-        }
-        outheader.append(",Case");
-        out.println(outheader.toString());
-
-        List<String> controls = new ArrayList<String>();
-        int cases = 0;
-        for (int hadm_id : patientmap.keySet()) {
-          Instance instance = patientmap.get(hadm_id).instance;
-          
-          StringBuilder buf = new StringBuilder();
-          buf.append(hadm_id);
-          for (String code : complications.keySet()) {
-            buf.append(",");
-            if (classifiers.containsKey(code)) {
-              BayesNet bayes = classifiers.get(code);
-              double[] est = bayes.getEstimator().distributionForInstance(bayes, instance);
-              buf.append(est[0]);
-            } else {
-              buf.append(0);
-            }
-          }
-          
-          if (patientmap.get(hadm_id).categories.contains(category)) {
-            cases++;
-            buf.append(",Y");
-            out.println(buf.toString());
-          } else {
-            buf.append(",N");
-            controls.add(buf.toString());
-          }
-        }
-        
-        if (cases == 0) {
-          System.out.format("%s category %d has no cases!%n", name, category);
-        }
-        
-        Random rand = new Random(System.currentTimeMillis());
-        for (int x = 0; x < cases; x++) {
-          out.println(controls.remove(rand.nextInt(controls.size())));
-        }
-
-        out.flush();
-        out.close();
-      }
-
+//      for (int category = 1; category <= NUM_CATEGORIES; category++) {
+//        String outputname = name.substring(0, name.lastIndexOf(".")) + 
+//            ".category." + category + ".icd9.csv";
+//        System.out.println(outputname);
+//        File icd9out = new File(new File(outdir, ICD9_DIR), outputname);
+//        outputs.add(new SortFile(icd9out));
+//        out = new PrintWriter(new FileWriter(icd9out));
+//
+//        StringBuilder outheader = new StringBuilder();
+//        outheader.append("hadm_id");
+//        for (String code : complications.keySet()) {
+//          outheader.append(",");
+//          outheader.append(code);
+//        }
+//        outheader.append(",Case");
+//        out.println(outheader.toString());
+//
+//        List<String> controls = new ArrayList<String>();
+//        int cases = 0;
+//        for (int hadm_id : patientmap.keySet()) {
+//          Instance instance = patientmap.get(hadm_id).instance;
+//          
+//          StringBuilder buf = new StringBuilder();
+//          buf.append(hadm_id);
+//          for (String code : complications.keySet()) {
+//            buf.append(",");
+//            if (classifiers.containsKey(code)) {
+//              BayesNet bayes = classifiers.get(code);
+//              double[] est = bayes.getEstimator().distributionForInstance(bayes, instance);
+//              buf.append(est[0]);
+//            } else {
+//              buf.append(0);
+//            }
+//          }
+//          
+//          if (patientmap.get(hadm_id).categories.contains(category)) {
+//            cases++;
+//            buf.append(",Y");
+//            out.println(buf.toString());
+//          } else {
+//            buf.append(",N");
+//            controls.add(buf.toString());
+//          }
+//        }
+//        
+//        if (cases == 0) {
+//          System.out.format("%s category %d has no cases!%n", name, category);
+//        }
+//        
+//        Random rand = new Random(System.currentTimeMillis());
+//        for (int x = 0; x < cases; x++) {
+//          out.println(controls.remove(rand.nextInt(controls.size())));
+//        }
+//
+//        out.flush();
+//        out.close();
+//      }
+//
     }
-    
-    Collections.sort(outputs);
-    new MimicRunner(outputs, new File(outdir, "DoubleLayerResults.csv"), "1");
-    new MimicRanker(outputs, new File(outdir, "DoubleLayerRankings.txt"), "1");
+    System.out.println(cases.size());
+//    
+//    Collections.sort(outputs);
+//    new MimicRunner(outputs, new File(outdir, "DoubleLayerResults5.csv"), "1");
+//    new MimicRanker(outputs, new File(outdir, "DoubleLayerRankings.txt"), "1");
   }
   
   public static Instances preprocessData(Instances data) throws Exception {
@@ -252,6 +259,12 @@ public class MimicMain {
     data = Filter.useFilter(data, remove);
     
     if (removeop.equals("1")) {
+      // Discretize into three equal frequency bins
+      String[] discretizeOptions = {"-F", "-B", "3", "-M", "-1.0", "-R", "first-last"};
+      Discretize discretize = new Discretize();
+      discretize.setOptions(discretizeOptions);
+      discretize.setInputFormat(data);
+      data = Filter.useFilter(data, discretize);
       return data;
     }
 

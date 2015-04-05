@@ -3,6 +3,8 @@ package org.bcl.project.mimic;
 import java.io.*;
 import java.util.*;
 
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 
 public class RankCount
 {
@@ -51,6 +53,15 @@ public class RankCount
       for (int y = 0; y < HOURS.length; y++) {
         title.append(String.format(",Category %d Hour %d", x + 1, HOURS[y]));
       }
+      title.append(String.format(",Category %d Median Rank", x + 1));
+      title.append(String.format(",Category %d Mean Rank", x + 1));
+      title.append(String.format(",Category %d Max Rank", x + 1));
+      title.append(String.format(",Category %d Min Rank", x + 1));
+      title.append(String.format(",Category %d Median Change", x + 1));
+      title.append(String.format(",Category %d Mean Change", x + 1));
+      title.append(String.format(",Category %d Max Change", x + 1));
+      title.append(String.format(",Category %d Min Change", x + 1));
+      title.append(String.format(",Category %d Regression Slope", x + 1));
     }
     out.println(title.toString());
     
@@ -59,99 +70,75 @@ public class RankCount
       line.append(attribute);
       int[][] rank = rankings.get(attribute);
       for (int x = 0; x < NUM_CATEGORIES; x++) {
+        int count = 0;
+        double sum = 0;
+        int max = Integer.MIN_VALUE;
+        int min = Integer.MAX_VALUE;
+        
+        List<Integer> diffs = new ArrayList<Integer>();
+        double diffSum = 0;
+        int diffMax = Integer.MIN_VALUE;
+        int diffMin = Integer.MAX_VALUE;
+        
+        SimpleRegression reg = new SimpleRegression();
         for (int y = 0; y < HOURS.length; y++) {
           line.append(",");
           if (rank[x][y] != 0) {
             line.append(rank[x][y]);
+            count++;
+            sum += rank[x][y];
+            reg.addData(HOURS[y], rank[x][y]);
           }
+          max = Math.max(max, rank[x][y]);
+          min = Math.min(min, (rank[x][y] == 0) ? min : rank[x][y]);
+          
+          if (y > 0 && rank[x][y] != 0 && rank[x][y - 1] != 0) {
+            int diff = Math.abs(rank[x][y] - rank[x][y - 1]);
+            diffs.add(diff);
+            diffMax = Math.max(diffMax, diff);
+            diffMin = Math.min(diffMin, diff);
+            diffSum += diff;
+          }
+        }
+        
+        double median = median(rank[x]);
+        double mean = sum / count;
+        
+        if (diffs.size() > 0) {
+          double diffMedian = median(diffs);
+          double diffMean = diffSum / diffs.size();
+          line.append(String.format(",%.3f,%.3f,%d,%d,%.3f,%.3f,%d,%d", 
+              median, mean, max, min, diffMedian, diffMean, diffMax, diffMin));
+        } else {
+          line.append(String.format(",%.3f,%.3f,%d,%d,,,,", median, mean, max, min));
+        }
+        
+        if (Double.isNaN(reg.getSlope())) {
+          line.append(",");
+        } else {
+          line.append(String.format(",%.3f", reg.getSlope()));
         }
       }
       out.println(line.toString());
     }
     out.flush();
     out.close();
-		
-//		ArrayList<int[]> diffs = new ArrayList<int[]>();
-//		for(int x = 0; x < attributes.size(); x++)
-//		{
-//			int[] ranking = rankings.get(x);
-//			int[] diff = new int[ranking.length - 1];
-//			int cur = ranking[0];
-//			for(int y = 1; y < ranking.length; y++)
-//			{
-//				if(cur != Integer.MIN_VALUE && ranking[y] != Integer.MIN_VALUE)
-//					diff[y - 1] = ranking[y] - cur;
-//				else
-//					diff[y - 1] = Integer.MIN_VALUE;
-//				cur = ranking[y];
-//			}
-//			diffs.add(diff);
-//		}
-//		
-//		ArrayList<double[]> stats = new ArrayList<double[]>();
-//		for(int x = 0; x < attributes.size(); x++)
-//		{
-//			int[] diff = diffs.get(x);
-//			int max = Integer.MIN_VALUE;
-//			int min = Integer.MAX_VALUE;
-//			int count = 0;
-//			int tot = 0;
-//			int squared = 0;
-//			for(int y = 0; y < diff.length; y++)
-//			{
-//				if(diff[y] != Integer.MIN_VALUE)
-//				{
-//					tot += diff[y];
-//					squared += diff[y] * diff[y];
-//					count++;
-//					max = Math.max(max, diff[y]);
-//					min = Math.min(min, diff[y]);
-//				}
-//			}
-//			int[] a = diff.clone();
-//			Arrays.sort(a);
-//			double[] stat = new double[7];
-//			if(count != 0)
-//			{
-//				stat[0] = (double)tot / count;
-//				stat[2] = (double)squared / count;
-//			}
-//			else
-//			{
-//				stat[0] = Integer.MIN_VALUE;
-//				stat[2] = Integer.MIN_VALUE;
-//			}
-//			stat[1] = median(a);
-//			
-//			stat[3] = max;
-//			stat[4] = min;
-//			
-//			tot = 0;
-//			count = 0;
-//			int[] rank = rankings.get(x);
-//			for(int y = 0; y < rank.length; y++)
-//			{
-//				if(rank[y] != Integer.MIN_VALUE)
-//				{
-//					tot += rank[y];
-//					count++;
-//				}
-//			}
-//			a = rank.clone();
-//			Arrays.sort(a);
-//			stat[5] = (double)tot / count;
-//			stat[6] = median(a);
-//		
-//			stats.add(stat);
-//		}
-//		
 	}
 	
-	double median(int[] arr)
-	{
+	private double median(List<Integer> input) {
+	  int[] arr = new int[input.size()];
+    for (int x = 0; x < input.size(); x++) 
+      arr[x] = input.get(x);
+    return median(arr);
+	}
+	
+	private double median(int[] input) {
+	  int[] arr = input.clone();
+	  Arrays.sort(arr);
+	  
 		int x;
 		for(x = 0; x < arr.length; x++)
-			if(arr[x] != Integer.MIN_VALUE)
+			if(arr[x] != 0)
 				break;
 		int start = x;
 		int end = arr.length - 1;
@@ -165,7 +152,7 @@ public class RankCount
 			start++;
 			end--;
 		}
-		return Integer.MIN_VALUE;
+		return -1;
 	}
 	
 	public static void main(String[] args) throws Exception
